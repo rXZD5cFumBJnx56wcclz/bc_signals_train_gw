@@ -1,0 +1,23 @@
+[package]
+name = "bc_signals_train_gw"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bc_utils = {path = "../bc_utils"}
+bc_utils_lg = {path = "../bc_utils_lg"}
+bc_signals_train = {path = "../bc_signals_train"}
+bc_indicators = {path = "../bc_indicators"}
+bc_indicators_gw = {path = "../bc_indicators_gw"}
+
+[dev-dependencies]
+bc_pack_signals_train = {path = "../../../bc_pack_signals_train"}
+bc_pack_indicators = {path = "../../../bc_pack_indicators"}
+
+criterion = {version = "0.8", features=["html_reports"]}
+pretty_assertions = "1"
+
+[[bench]]
+name = "gw"
+path = "benches/gw.rs"
+harness = false
