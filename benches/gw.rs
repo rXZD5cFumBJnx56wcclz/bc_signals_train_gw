@@ -1,7 +1,7 @@
 use std::hint::black_box;
 
-use bc_pack_signals_train::FUNCS_EXTRACT_ARGS as FUNCS_EXTRACT_ARGS_ST;
-use bc_utils_lg::statics::prices::SRC_TRANSPOSE;
+use bc_packs::PACK_SIGN_TR;
+use bc_test_kit::prelude::*;
 use bc_utils_lg::structs::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_USIZE};
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
@@ -14,7 +14,10 @@ fn get_signals_train_from_settings_1(c: &mut Criterion) {
         SETTINGS_SIGNAL {
             key: "mm".to_string(),
             kwargs_usize: MAP::from_iter([("window".to_string(), 10)]),
-            used_src: vec![SETTINGS_USED_USIZE { index: 1, sub_from_last_i: 0 }],
+            used_src: vec![SETTINGS_USED_USIZE {
+                index: 1,
+                sub_from_last_i: 0,
+            }],
             ..Default::default()
         },
     )]);
@@ -26,7 +29,7 @@ fn get_signals_train_from_settings_1(c: &mut Criterion) {
     let sr = SignalsTrain::new(
         &settings_signals,
         &bind,
-        &FUNCS_EXTRACT_ARGS_ST(),
+        &PACK_SIGN_TR,
         &SRC_TRANSPOSE,
         &bind2,
     );

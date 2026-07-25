@@ -11,8 +11,8 @@ bc_indicators = {path = "../bc_indicators"}
 bc_indicators_gw = {path = "../bc_indicators_gw"}
 
 [dev-dependencies]
-bc_pack_signals_train = {path = "../../../bc_pack_signals_train"}
-bc_pack_indicators = {path = "../../../bc_pack_indicators"}
+bc_test_kit = {path = "../bc_test_kit"}
+bc_packs = {path = "../bc_packs"}
 
 criterion = {version = "0.8", features=["html_reports"]}
 pretty_assertions = "1"
