@@ -6,7 +6,7 @@ use bc_utils_lg::structs::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS
 use bc_utils_lg::types::maps::MAP;
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use bc_signals_train_gw::gw::{SignalsTrain, SignalsTrainGateway};
+use bc_signals_train_gw::gw::{SignalsTrain, SignalsTrainExt, SignalsTrainGateway};
 
 fn get_signals_train_from_settings_1(c: &mut Criterion) {
     let settings_signals = SETTINGS_SIGNALS::from_iter([(
@@ -29,9 +29,9 @@ fn get_signals_train_from_settings_1(c: &mut Criterion) {
     let sr = SignalsTrain::new(
         &settings_signals,
         &bind,
-        &PACK_SIGN_TR,
         &SRC_TRANSPOSE,
         &bind2,
+        &PACK_SIGN_TR,
     );
     let sr_gw = SignalsTrainGateway::new(&sr, &bind3, &settings_signals, &bind4);
     c.bench_function("get_signals_train_from_settings_1", |b| {
