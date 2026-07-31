@@ -1,41 +1,31 @@
 use std::hint::black_box;
 
-use bc_packs::PACK_SIGN_TR;
+use bc_indicators_gw::gw::Indicators;
+use bc_packs::{PACK_IND, PACK_SIGN_TR};
 use bc_test_kit::prelude::*;
-use bc_utils_lg::structs::settings::{SETTINGS_SIGNAL, SETTINGS_SIGNALS, SETTINGS_USED_USIZE};
-use bc_utils_lg::types::maps::MAP;
+use bc_test_kit::settings::signals_train::SIGNALS_TRAIN;
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use bc_signals_train_gw::gw::{SignalsTrain, SignalsTrainExt, SignalsTrainGateway};
+use bc_signals_train_gw::gw::SignalsTrain;
 
 fn get_signals_train_from_settings_1(c: &mut Criterion) {
-    let settings_signals = SETTINGS_SIGNALS::from_iter([(
-        "mm_1".to_string(),
-        SETTINGS_SIGNAL {
-            key: "mm".to_string(),
-            kwargs_usize: MAP::from_iter([("window".to_string(), 10)]),
-            used_src: vec![SETTINGS_USED_USIZE {
-                index: 1,
-                sub_from_last_i: 0,
-            }],
-            ..Default::default()
-        },
-    )]);
-    let bind = Default::default();
-    let bind2 = Default::default();
-    let bind3 = Default::default();
-    let bind4 = Default::default();
-    let bind5 = Default::default();
+    let indicators = Indicators::new(&SRC_TRANSPOSE, &INDICATIONS, &PACK_IND);
+    let indications = indicators.series(&SRC_TRANSPOSE, &INDICATIONS);
     let sr = SignalsTrain::new(
-        &settings_signals,
-        &bind,
         &SRC_TRANSPOSE,
-        &bind2,
+        &SIGNALS_TRAIN,
+        &INDICATIONS,
+        &indicators,
         &PACK_SIGN_TR,
     );
-    let sr_gw = SignalsTrainGateway::new(&sr, &bind3, &settings_signals, &bind4);
     c.bench_function("get_signals_train_from_settings_1", |b| {
-        b.iter(|| sr_gw.signals_series(black_box(&bind5), black_box(&SRC_TRANSPOSE)))
+        b.iter(|| {
+            sr.series(
+                black_box(&SRC_TRANSPOSE),
+                black_box(&SIGNALS_TRAIN),
+                black_box(&indications),
+            )
+        })
     });
 }
 

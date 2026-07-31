@@ -1,18 +1,18 @@
 [package]
 name = "bc_signals_train_gw"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 
 [dependencies]
-bc_utils = {git = "https://github.com/rXZD5cFumBJnx56wcclz/bc_utils.git", branch = "main"}
-bc_utils_lg ={ git = "https://github.com/rXZD5cFumBJnx56wcclz/bc_utils_lg.git", branch = "main"}
-bc_signals_train = {git = "https://github.com/rXZD5cFumBJnx56wcclz/bc_signals_train.git", branch = "main"}
-bc_indicators = {git = "https://github.com/rXZD5cFumBJnx56wcclz/bc_indicators.git", branch = "main"}
-bc_indicators_gw = {git = "https://github.com/rXZD5cFumBJnx56wcclz/bc_indicators_gw.git", branch = "main"}
+bc_utils = {path = "../bc_utils"}
+bc_utils_lg = {path = "../bc_utils_lg"}
+bc_signals_train = {path = "../bc_signals_train"}
+bc_indicators = {path = "../bc_indicators"}
+bc_indicators_gw = {path = "../bc_indicators_gw"}
 
 [dev-dependencies]
-bc_test_kit = {git = "https://github.com/rXZD5cFumBJnx56wcclz/bc_test_kit.git", branch = "main"}
-bc_packs = {git = "https://github.com/rXZD5cFumBJnx56wcclz/bc_packs.git", branch = "main"}
+bc_test_kit = {path = "../bc_test_kit"}
+bc_packs = {path = "../bc_packs"}
 
 criterion = {version = "0.8", features=["html_reports"]}
 pretty_assertions = "1"
