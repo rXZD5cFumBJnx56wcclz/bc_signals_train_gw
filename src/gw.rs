@@ -34,7 +34,7 @@ pub fn get_src<'a>(
     Default::default()
 }
 
-fn get_src_series(
+pub fn get_src_series(
     buffer: &[Vec<f64>],
     indications: &MAP<&str, f64>,
     signals_train: &MAP<&str, f64>,
@@ -50,7 +50,7 @@ fn get_src_series(
     for ind_arg_el in &s.used_ind {
         res.push(indications[ind_arg_el.as_str()]);
     }
-    for signals_arg_el in &s.used_signals {
+    for signals_arg_el in &s.used_signals_train {
         res.push(signals_train[signals_arg_el.as_str()].clone());
     }
     if !s.procedure_used_src.is_empty() {
@@ -59,7 +59,7 @@ fn get_src_series(
     res
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct SignalsTrain<'a>(pub MAP<&'a str, Box<dyn SignalTrain>>);
 
 impl W for SignalsTrain<'_> {
@@ -84,7 +84,7 @@ impl<'a> SignalsTrain<'a> {
         )
     }
     pub fn w_all(&self, s: &SETTINGS_SIGNALS) -> usize {
-        self.w_map_all(s).values().max().copied().unwrap()
+        self.w_map_all(s).values().max().copied().unwrap_or_default()
     }
 }
 
