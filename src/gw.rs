@@ -64,7 +64,7 @@ pub struct SignalsTrain<'a>(pub MAP<&'a str, Box<dyn SignalTrain>>);
 
 impl W for SignalsTrain<'_> {
     fn w(&self) -> usize {
-        self.0.values().map(|v| v.w()).max().unwrap()
+        self.0.values().map(|v| v.w()).max().unwrap_or_default()
     }
 }
 
@@ -84,7 +84,11 @@ impl<'a> SignalsTrain<'a> {
         )
     }
     pub fn w_all(&self, s: &SETTINGS_SIGNALS) -> usize {
-        self.w_map_all(s).values().max().copied().unwrap_or_default()
+        self.w_map_all(s)
+            .values()
+            .max()
+            .copied()
+            .unwrap_or_default()
     }
 }
 
@@ -116,7 +120,9 @@ impl<'a> SignalsTrain<'a> {
             transpose(buffer_vec_trans[..w].to_vec()),
             transpose(buffer_vec_trans[w..].to_vec()),
         );
-        indicators.init_bf(&buffer_ind_init, s_ind);
+        if indicators.w() != 0 {
+            indicators.init_bf(&buffer_ind_init, s_ind);
+        }
         let map_ind = indicators.vec(&buffer_ind_vec, s_ind);
         let mut map_sign = MAP::default();
         for (k, setting) in s.iter() {
