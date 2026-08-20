@@ -9,9 +9,11 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use bc_signals_train_gw::gw::SignalsTrain;
 
 fn get_signals_train_from_settings_1(c: &mut Criterion) {
-    let indicators = Indicators::new(&SRC_TRANSPOSE, &INDICATIONS, &PACK_IND);
+    let mut indicators = Indicators::default();
+    indicators.init(&SRC_TRANSPOSE, &INDICATIONS, &PACK_IND);
     let indications = indicators.series(&SRC_TRANSPOSE, &INDICATIONS);
-    let sr = SignalsTrain::new(
+    let mut sr = SignalsTrain::default();
+    sr.init(
         &SRC_TRANSPOSE,
         &SIGNALS_TRAIN,
         &INDICATIONS,
