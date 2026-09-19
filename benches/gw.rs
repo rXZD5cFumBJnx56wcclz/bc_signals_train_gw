@@ -3,7 +3,7 @@ use std::hint::black_box;
 use bc_indicators_gw::gw::Indicators;
 use bc_packs::{PACK_IND, PACK_SIGN_TR};
 use bc_test_kit::prelude::*;
-use bc_test_kit::settings::signals_train::SIGNALS_TRAIN;
+use bc_utils_lg::test_state::prelude::*;
 use criterion::{Criterion, criterion_group, criterion_main};
 
 use bc_signals_train_gw::gw::SignalsTrain;

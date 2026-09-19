@@ -1,11 +1,11 @@
 [package]
 name = "bc_signals_train_gw"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 
 [dependencies]
 bc_utils = {path = "../bc_utils"}
-bc_utils_lg = {path = "../bc_utils_lg"}
+bc_utils_lg = {path = "../bc_utils_lg", features = ["test_state"]}
 bc_signals_train = {path = "../bc_signals_train"}
 bc_indicators = {path = "../bc_indicators"}
 bc_indicators_gw = {path = "../bc_indicators_gw"}
@@ -21,3 +21,6 @@ pretty_assertions = "1"
 name = "gw"
 path = "benches/gw.rs"
 harness = false
+
+[features]
+test_state = []

@@ -188,15 +188,11 @@ impl<'a> SignalsTrain<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::any::Any;
 
     use bc_packs::{PACK_IND, PACK_SIGN_TR};
     use bc_signals_train::mm::MM;
     use bc_test_kit::prelude::*;
-    use bc_test_kit::settings::signals_train::SIGNALS_TRAIN;
-
-    use bc_utils_lg::types::maps::MAP;
-    use pretty_assertions::assert_eq as assert_eq_pr;
+    use bc_utils_lg::test_state::prelude::*;
 
     #[test]
     fn new_empty_bf_res_1() {
