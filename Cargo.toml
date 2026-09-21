@@ -1,11 +1,12 @@
 [package]
 name = "bc_signals_train_gw"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2024"
 
 [dependencies]
-bc_utils = {path = "../bc_utils"}
 bc_utils_lg = {path = "../bc_utils_lg", features = ["test_state"]}
+bc_utils = {path = "../bc_utils"}
+bc_gw_utils = {path = "../bc_gw_utils"}
 bc_signals_train = {path = "../bc_signals_train"}
 bc_indicators = {path = "../bc_indicators"}
 bc_indicators_gw = {path = "../bc_indicators_gw"}

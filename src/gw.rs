@@ -1,63 +1,9 @@
+use bc_gw_utils::prelude::*;
 use bc_signals_train::prelude::*;
-use bc_utils::other::{procedure_used, transpose, vec_len_sync_set};
-use bc_utils_lg::structs::settings::{SETTINGS_INDS, SETTINGS_SIGNAL, SETTINGS_SIGNALS};
-use bc_utils_lg::traits::w::{w_scan, w_src, w_sum};
-use bc_utils_lg::types::maps::{MAP, MAP_LINK, PACK};
+use bc_utils::other::transpose;
+use bc_utils_lg::prelude::*;
 
 use bc_indicators_gw::gw::Indicators;
-
-pub fn get_src<'a>(
-    buffer: &[Vec<f64>],
-    indications: &MAP<&str, Vec<f64>>,
-    signals_train: &MAP<&str, Vec<f64>>,
-    s: &SETTINGS_SIGNAL,
-) -> Vec<Vec<f64>> {
-    let mut res =
-        Vec::with_capacity(s.used_src.len() + s.used_ind.len() + s.used_signals_train.len());
-    for used_src in &s.used_src {
-        let src = &buffer[used_src.index];
-        res.push(src[..src.len() - used_src.sub_from_last_i].to_vec());
-    }
-    for used_ind in &s.used_ind {
-        res.push(indications[used_ind.as_str()].to_vec());
-    }
-    for used_signals_train in &s.used_signals_train {
-        res.push(signals_train[used_signals_train.as_str()].to_vec());
-    }
-    if !s.procedure_used_src.is_empty() {
-        res = procedure_used(res, &s.procedure_used_src);
-    }
-    if !res.is_empty() {
-        vec_len_sync_set(&mut res);
-        return transpose(res);
-    }
-    Default::default()
-}
-
-pub fn get_src_series(
-    buffer: &[Vec<f64>],
-    indications: &MAP<&str, f64>,
-    signals_train: &MAP<&str, f64>,
-    s: &SETTINGS_SIGNAL,
-) -> Vec<f64> {
-    let mut res = vec![];
-    for src_arg_el in &s.used_src {
-        res.push({
-            let sk = &buffer[src_arg_el.index];
-            sk[sk.len() - 1 - src_arg_el.sub_from_last_i]
-        });
-    }
-    for ind_arg_el in &s.used_ind {
-        res.push(indications[ind_arg_el.as_str()]);
-    }
-    for signals_arg_el in &s.used_signals_train {
-        res.push(signals_train[signals_arg_el.as_str()].clone());
-    }
-    if !s.procedure_used_src.is_empty() {
-        res = procedure_used(res, &s.procedure_used_src);
-    }
-    res
-}
 
 #[derive(Default, Clone)]
 pub struct SignalsTrain<'a>(pub MAP<&'a str, Box<dyn SignalTrain>>);
@@ -128,7 +74,11 @@ impl<'a> SignalsTrain<'a> {
         let mut map_sign = MAP::default();
         for (k, setting) in s.iter() {
             let signal = &self.0[k.as_str()];
-            let src = get_src(buffer, &map_ind, &map_sign, setting);
+            let mut src = SrcGw::default();
+            src.push_vec(&buffer, &setting.used_src);
+            src.push_map(&map_ind, &setting.used_ind);
+            src.push_map(&map_sign, &setting.used_signals_train);
+            src.all_check(&setting.procedure_used_src);
             signal.init_bf(&src[..signal.w()]);
             map_sign.insert(k.as_str(), signal.signals_vec(&src[signal.w()..]));
             signal.init_bf(&src);
@@ -156,10 +106,12 @@ impl<'a> SignalsTrain<'a> {
     ) -> MAP<&'a str, f64> {
         s.iter().fold(MAP::default(), |mut init, (k, setting)| {
             let signal = &self.0[k.as_str()];
-            init.insert(
-                k.as_str(),
-                signal.signal(&get_src_series(buffer, indications, &init, setting)),
-            );
+            let mut src = SrcGwSeries::default();
+            src.push_vec(buffer, &setting.used_src);
+            src.push_map(indications, &setting.used_ind);
+            src.push_map(&init, &setting.used_signals_train);
+            src.all_check(&setting.procedure_used_src);
+            init.insert(k.as_str(), signal.signal(&src));
             init
         })
     }
@@ -176,10 +128,12 @@ impl<'a> SignalsTrain<'a> {
     ) -> MAP<&'a str, Vec<f64>> {
         s.iter().fold(MAP::default(), |mut init, (k, setting)| {
             let signal = &self.0[k.as_str()];
-            init.insert(
-                k.as_str(),
-                signal.signals_vec(&get_src(buffer, indications, &init, setting)),
-            );
+            let mut src = SrcGw::default();
+            src.push_vec(buffer, &setting.used_src);
+            src.push_map(indications, &setting.used_ind);
+            src.push_map(&init, &setting.used_signals_train);
+            src.all_check(&setting.procedure_used_src);
+            init.insert(k.as_str(), signal.signals_vec(&src));
             init
         })
     }
@@ -212,42 +166,6 @@ mod tests {
     }
 
     #[test]
-    fn get_src_res_1() {
-        let mut indicators = Indicators::default();
-        indicators.init_empty(&INDICATIONS, &PACK_IND);
-        let w_all = indicators.w_all(&INDICATIONS);
-        indicators.init_bf(&transpose(SRC[..w_all].to_vec()), &INDICATIONS);
-        let indications = indicators.vec(&transpose(SRC[w_all..].to_vec()), &INDICATIONS);
-        assert_eq_pr!(
-            get_src(
-                &SRC_TRANSPOSE,
-                &indications,
-                &Default::default(),
-                &SIGNALS_TRAIN["mm_1"]
-            ),
-            transpose(vec![
-                OPEN[indications["rma_1"].len() - SIGNALS_TRAIN["mm_1"].used_src[0].sub_from_last_i
-                    ..OPEN.len() - SIGNALS_TRAIN["mm_1"].used_src[0].sub_from_last_i]
-                    .to_vec(),
-                indications["rma_1"].to_vec()
-            ])
-        );
-    }
-
-    #[test]
-    fn get_src_series_res_1() {
-        assert_eq_pr!(
-            get_src_series(
-                &SRC_TRANSPOSE,
-                &MAP::from_iter([("rma_1", 1.)]),
-                &Default::default(),
-                &SIGNALS_TRAIN["mm_1"]
-            ),
-            vec![SRC_EL1[1], 1.,]
-        )
-    }
-
-    #[test]
     fn init_bf_res_1() {
         let mut indicators = Indicators::default();
         indicators.init_empty(&INDICATIONS, &PACK_IND);
@@ -268,12 +186,11 @@ mod tests {
             &indicators,
         );
         let res = signals_train.0["mm_1"].clone();
-        res.init_bf(&get_src(
-            &buffer_ind_vec,
-            &map_ind,
-            &Default::default(),
-            &SIGNALS_TRAIN["mm_1"],
-        ));
+        let mut src_test = SrcGw::default();
+        src_test.push_vec(&buffer_ind_vec, &SIGNALS_TRAIN["mm_1"].used_src);
+        src_test.push_map(&map_ind, &SIGNALS_TRAIN["mm_1"].used_ind);
+        src_test.all_check(&SIGNALS_TRAIN["mm_1"].procedure_used_src);
+        res.init_bf(&src_test);
         assert_eq_pr!(
             signals_train.series(
                 &SRC_TRANSPOSE,
@@ -293,14 +210,13 @@ mod tests {
         indicators.init_bf(&SRC_TRANSPOSE, &INDICATIONS);
         signals_train.init_bf(&SRC_TRANSPOSE, &SIGNALS_TRAIN, &INDICATIONS, &indicators);
         let indications = indicators.series(&SRC_TRANSPOSE, &INDICATIONS);
+        let mut src_test = SrcGwSeries::default();
+        src_test.push_vec(&SRC_TRANSPOSE, &SIGNALS_TRAIN["mm_1"].used_src);
+        src_test.push_map(&indications, &SIGNALS_TRAIN["mm_1"].used_ind);
+        src_test.all_check(&SIGNALS_TRAIN["mm_1"].procedure_used_src);
         assert_eq_pr!(
             signals_train.series(&SRC_TRANSPOSE, &SIGNALS_TRAIN, &indications)["mm_1"],
-            signals_train.0["mm_1"].signal(&get_src_series(
-                &SRC_TRANSPOSE,
-                &indications,
-                &Default::default(),
-                &SIGNALS_TRAIN["mm_1"]
-            ))
+            signals_train.0["mm_1"].signal(&src_test)
         );
     }
 
@@ -313,14 +229,13 @@ mod tests {
         indicators.init_bf(&SRC_TRANSPOSE, &INDICATIONS);
         signals_train.init_bf(&SRC_TRANSPOSE, &SIGNALS_TRAIN, &INDICATIONS, &indicators);
         let indications = indicators.vec(&SRC_TRANSPOSE, &INDICATIONS);
+        let mut src_test = SrcGw::default();
+        src_test.push_vec(&SRC_TRANSPOSE, &SIGNALS_TRAIN["mm_1"].used_src);
+        src_test.push_map(&indications, &SIGNALS_TRAIN["mm_1"].used_ind);
+        src_test.all_check(&SIGNALS_TRAIN["mm_1"].procedure_used_src);
         assert_eq_pr!(
             signals_train.vec(&SRC_TRANSPOSE, &SIGNALS_TRAIN, &indications)["mm_1"],
-            signals_train.0["mm_1"].signals_vec(&get_src(
-                &SRC_TRANSPOSE,
-                &indications,
-                &Default::default(),
-                &SIGNALS_TRAIN["mm_1"]
-            ))
+            signals_train.0["mm_1"].signals_vec(&src_test)
         );
     }
 }
